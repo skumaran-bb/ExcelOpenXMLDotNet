@@ -19,6 +19,7 @@ public class ExcelFileService
     }
     private Stylesheet CreateStylesheet()
     {
+        #region Fonts
         // Creating FONTS
         // *************************************
         Fonts fts = new();
@@ -39,9 +40,10 @@ public class ExcelFileService
         fts.Append(ft); // Adding the font to Fonts[1]
 
         fts.Count = UInt32Value.FromUInt32((uint)fts.ChildElements.Count); // Assigning the fonts count
-        // ***** END OF FONTS ********************************
+                                                                           // ***** END OF FONTS ********************************
+        #endregion
 
-
+        #region Fills >> Patterns
         // Creating FILLS
         // *************************************
         Fills fills = new();
@@ -63,8 +65,9 @@ public class ExcelFileService
 
         fills.Count = UInt32Value.FromUInt32((uint)fills.ChildElements.Count);
         // ***** END OF FILLS ********************************
+        #endregion
 
-
+        #region Borders
         // Creating BORDERS
         // *************************************
         Borders borders = new Borders();
@@ -91,8 +94,9 @@ public class ExcelFileService
 
         borders.Count = UInt32Value.FromUInt32((uint)borders.ChildElements.Count);
         // ***** END OF BORDERS ********************************
+        #endregion
 
-
+        #region Cell Style Format
         // Creating CELL STYLE FORMAT
         // *************************************
         CellStyleFormats csfs = new CellStyleFormats();
@@ -106,8 +110,9 @@ public class ExcelFileService
 
         csfs.Count = UInt32Value.FromUInt32((uint)csfs.ChildElements.Count);
         // ***** END OF CELL STYLE FORMAT ********************************
+        #endregion
 
-
+        #region Numbering Format
         // Creating NUMBERING FORMAT
         // *************************************
         uint iExcelIndex = 164;
@@ -139,8 +144,9 @@ public class ExcelFileService
         nfs.Count = UInt32Value.FromUInt32((uint)nfs.ChildElements.Count);
 
         // ***** END OF NUMBERING FORMAT ********************************
+        #endregion
 
-
+        #region Cell Formats
         // Creating CELL FORMATS
         // *************************************
         CellFormats cfs = new CellFormats();
@@ -267,7 +273,9 @@ public class ExcelFileService
         cfs.Count = UInt32Value.FromUInt32((uint)cfs.ChildElements.Count);
 
         // ***** END OF CELL FORMATS ********************************
+        #endregion
 
+        #region Creating Stylesheet
         // Creating STYLESHEET
         // *************************************
         //Adding Formats, Fonts, Fills, Borders, CellStyleFormats, CellFormats to STYLESHEET
@@ -299,6 +307,7 @@ public class ExcelFileService
         ss.Append(tss);
 
         // *******END of STYLESHEET ******************************
+        #endregion
 
         return ss;
     }
@@ -316,33 +325,32 @@ public class ExcelFileService
             {
                 WorkbookPart wbp = xl.AddWorkbookPart();
                 WorksheetPart wsp = wbp.AddNewPart<WorksheetPart>();
-                Workbook wb = new Workbook();
-                FileVersion fv = new FileVersion();
-                fv.ApplicationName = "Microsoft Office Excel";
-                Worksheet ws = new Worksheet();
-                SheetData sd = new SheetData();
+                Workbook wb = new();
+                FileVersion fv = new() { ApplicationName = "Microsoft Office Excel" };
+                Worksheet ws = new();
+                SheetData sd = new();
 
                 WorkbookStylesPart wbsp = wbp.AddNewPart<WorkbookStylesPart>();
                 wbsp.Stylesheet = CreateStylesheet();
                 wbsp.Stylesheet.Save();
 
-                Columns columns = new Columns();
-                columns.Append(CreateColumnData(1, 1, 8));
-                columns.Append(CreateColumnData(2, 2, 12));
-                columns.Append(CreateColumnData(3, 3, 18));
-                columns.Append(CreateColumnData(4, 4, 22));
-                columns.Append(CreateColumnData(5, 5, 12));
-                columns.Append(CreateColumnData(6, 6, 12));
-
+                Columns columns = new();
+                #region Create Column(s)
+                columns.Append(CreateColumn(1, 1, 8));
+                columns.Append(CreateColumn(2, 2, 12));
+                columns.Append(CreateColumn(3, 3, 18));
+                columns.Append(CreateColumn(4, 4, 22));
+                columns.Append(CreateColumn(5, 5, 12));
+                columns.Append(CreateColumn(6, 6, 12));
+                #endregion
                 ws.Append(columns);
 
-                Row r;
-                Cell c;
-
-                // header
-                r = new Row();
+                Row r; Cell c;
+                r = new Row(); // header row
                 r.Height = DoubleValue.FromDouble(90);
                 r.CustomHeight = BooleanValue.FromBoolean(true);
+
+                #region Creating cells for a row
 
                 c = new Cell();
                 c.DataType = CellValues.String;
@@ -387,11 +395,11 @@ public class ExcelFileService
                 c.StyleIndex = 5;
                 r.Append(c);
 
+                #endregion
                 sd.Append(r);
 
-
-                // content
-                int rowNo = 2;
+                int rowNo = 2; // content row
+                #region Iterating data and add new rows with cells
 
                 foreach (var data in rows)
                 {
@@ -447,14 +455,13 @@ public class ExcelFileService
                     rowNo++;
                 }
 
+                #endregion
                 ws.Append(sd);
                 wsp.Worksheet = ws;
                 wsp.Worksheet.Save();
-                Sheets sheets = new Sheets();
-                Sheet sheet = new Sheet();
-                sheet.Name = "Employee Data";
-                sheet.SheetId = 1;
-                sheet.Id = wbp.GetIdOfPart(wsp);
+
+                Sheets sheets = new();
+                Sheet sheet = new() { Name= "Employee Data", SheetId=1, Id = wbp.GetIdOfPart(wsp)};
                 sheets.Append(sheet);
                 wb.Append(fv);
                 wb.Append(sheets);
@@ -471,7 +478,7 @@ public class ExcelFileService
         }
     }
 
-    private Column CreateColumnData(UInt32 StartColumnIndex, UInt32 EndColumnIndex, double ColumnWidth)
+    private Column CreateColumn(UInt32 StartColumnIndex, UInt32 EndColumnIndex, double ColumnWidth)
     {
         Column column;
         column = new Column();
